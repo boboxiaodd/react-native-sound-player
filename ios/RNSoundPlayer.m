@@ -175,6 +175,7 @@ RCT_REMAP_METHOD(getInfo,
     NSError *playerError;
     NSData *audioData = [[NSData alloc] initWithContentsOfURL:soundURL];
     self.player = [[AVAudioPlayer alloc] initWithData:audioData error:&playerError];
+    self.player.delegate = self;
     if(playerError != nil){
         [self sendEventWithName:EVENT_FINISHED_LOADING_URL body:@{@"success": [NSNumber numberWithBool:false]}];
     }else{
