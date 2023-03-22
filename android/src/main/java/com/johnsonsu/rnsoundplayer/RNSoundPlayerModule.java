@@ -217,6 +217,17 @@ public class RNSoundPlayerModule extends ReactContextBaseJavaModule implements L
     if (this.mediaPlayer == null) {
       Uri uri = Uri.parse(url);
       this.mediaPlayer = MediaPlayer.create(getCurrentActivity(), uri);
+      this.mediaPlayer.setOnErrorListener(
+          new MediaPlayer.OnErrorListener() {
+            @Override
+            public boolean onError(MediaPlayer mediaPlayer, int i, int i1) {
+              WritableMap onFinishedLoadingURLParams = Arguments.createMap();
+              onFinishedLoadingURLParams.putBoolean("success", false);
+              sendEvent(getReactApplicationContext(), EVENT_FINISHED_LOADING_URL, onFinishedLoadingURLParams);
+              return false;
+            }
+          }
+      );
       this.mediaPlayer.setOnCompletionListener(
         new OnCompletionListener() {
           @Override
