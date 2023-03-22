@@ -155,15 +155,7 @@ RCT_REMAP_METHOD(getInfo,
         self.avPlayer = nil;
     }
     
-    NSString *soundFilePath = [[NSBundle mainBundle] pathForResource:name ofType:type];
-    
-    if (soundFilePath == nil) {
-        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask, YES);
-        NSString *documentsDirectory = [paths objectAtIndex:0];
-        soundFilePath = [NSString stringWithFormat:@"%@.%@", [documentsDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@",name]], type];
-    }
-    
-    NSURL *soundFileURL = [NSURL fileURLWithPath:soundFilePath];
+    NSURL *soundFileURL = [NSURL fileURLWithPath: name];
     self.player = [[AVAudioPlayer alloc] initWithContentsOfURL:soundFileURL error:nil];
     [self.player setDelegate:self];
     [self.player setNumberOfLoops:self.loopCount];
@@ -176,16 +168,18 @@ RCT_REMAP_METHOD(getInfo,
 }
 
 - (void) prepareUrl:(NSString *)url {
-    if (self.avPlayer) {
-        self.avPlayer = nil;
+    if (self.player) {
+        self.player = nil;
     }
     NSURL *soundURL = [NSURL URLWithString:url];
     NSError *playerError;
-    self.player = [[AVAudioPlayer alloc] initWithContentsOfURL:soundURL fileTypeHint:nil error:&playerError];
-    if(self.player == nil){
-        [self sendEventWithName:EVENT_FINISHED_LOADING_URL body: @{@"success": [NSNumber numberWithBool:false], @"url": [playerError description]}];
+    NSData *audioData = [[NSData alloc] initWithContentsOfURL:soundURL];
+    self.player = [[AVAudioPlayer alloc] initWithData:audioData error:&playerError];
+    if(playerError != nil){
+        [self sendEventWithName:EVENT_FINISHED_LOADING_URL body:@{@"success": [NSNumber numberWithBool:false]}];
     }else{
-        [self sendEventWithName:EVENT_FINISHED_LOADING_URL body: @{@"success": [NSNumber numberWithBool:true]}];
+        [self sendEventWithName:EVENT_FINISHED_LOADING_URL body:@{@"success": [NSNumber numberWithBool:true]}];
+        [self.player prepareToPlay];
     }
 }
 
