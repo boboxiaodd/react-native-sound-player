@@ -176,19 +176,17 @@ RCT_REMAP_METHOD(getInfo,
 }
 
 - (void) prepareUrl:(NSString *)url {
-    if (self.player) {
-        self.player = nil;
+    if (self.avPlayer) {
+        self.avPlayer = nil;
     }
     NSURL *soundURL = [NSURL URLWithString:url];
-    
-    if (!self.avPlayer) {
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(itemDidFinishPlaying:) name:AVPlayerItemDidPlayToEndTimeNotification object:nil];
+    NSError *playerError;
+    self.player = [[AVAudioPlayer alloc] initWithContentsOfURL:soundURL fileTypeHint:nil error:&playerError];
+    if(self.player == nil){
+        [self sendEventWithName:EVENT_FINISHED_LOADING_URL body: @{@"success": [NSNumber numberWithBool:false], @"url": [playerError description]}];
+    }else{
+        [self sendEventWithName:EVENT_FINISHED_LOADING_URL body: @{@"success": [NSNumber numberWithBool:true]}];
     }
-    
-    self.avPlayer = [[AVPlayer alloc] initWithURL:soundURL];
-    [self.player prepareToPlay];
-    [self sendEventWithName:EVENT_FINISHED_LOADING body:@{@"success": [NSNumber numberWithBool:true]}];
-    [self sendEventWithName:EVENT_FINISHED_LOADING_URL body: @{@"success": [NSNumber numberWithBool:true], @"url": url}];
 }
 
 RCT_EXPORT_MODULE();
