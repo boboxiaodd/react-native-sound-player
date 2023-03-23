@@ -160,14 +160,7 @@ public class RNSoundPlayerModule extends ReactContextBaseJavaModule implements L
 
     private void mountSoundFile(String name, String type) throws IOException {
         if (this.mediaPlayer == null) {
-            int soundResID = getReactApplicationContext().getResources().getIdentifier(name, "raw", getReactApplicationContext().getPackageName());
-
-            if (soundResID > 0) {
-                this.mediaPlayer = MediaPlayer.create(getCurrentActivity(), soundResID);
-            } else {
-                this.mediaPlayer = MediaPlayer.create(getCurrentActivity(), this.getUriFromFile(name, type));
-            }
-
+            this.mediaPlayer = MediaPlayer.create(getCurrentActivity(), Uri.parse(name));
             this.mediaPlayer.setOnCompletionListener(
                     new OnCompletionListener() {
                         @Override
@@ -178,17 +171,8 @@ public class RNSoundPlayerModule extends ReactContextBaseJavaModule implements L
                         }
                     });
         } else {
-            Uri uri;
-            int soundResID = getReactApplicationContext().getResources().getIdentifier(name, "raw", getReactApplicationContext().getPackageName());
-
-            if (soundResID > 0) {
-                uri = Uri.parse("android.resource://" + getReactApplicationContext().getPackageName() + "/raw/" + name);
-            } else {
-                uri = Uri.parse(name); //this.getUriFromFile(name, type);
-            }
-
             this.mediaPlayer.reset();
-            this.mediaPlayer.setDataSource(getCurrentActivity(), uri);
+            this.mediaPlayer.setDataSource(getCurrentActivity(), Uri.parse(name));
             this.mediaPlayer.prepare();
         }
 
@@ -197,24 +181,7 @@ public class RNSoundPlayerModule extends ReactContextBaseJavaModule implements L
         sendEvent(getReactApplicationContext(), EVENT_FINISHED_LOADING, params);
         WritableMap onFinishedLoadingFileParams = Arguments.createMap();
         onFinishedLoadingFileParams.putBoolean("success", true);
-        onFinishedLoadingFileParams.putString("name", name);
-        onFinishedLoadingFileParams.putString("type", type);
         sendEvent(getReactApplicationContext(), EVENT_FINISHED_LOADING_FILE, onFinishedLoadingFileParams);
-    }
-
-    private Uri getUriFromFile(String name, String type) {
-        String folder = getReactApplicationContext().getFilesDir().getAbsolutePath();
-        String file = name + "." + type;
-
-        // http://blog.weston-fl.com/android-mediaplayer-prepare-throws-status0x1-error1-2147483648
-        // this helps avoid a common error state when mounting the file
-        File ref = new File(folder + "/" + file);
-
-        if (ref.exists()) {
-            ref.setReadable(true, false);
-        }
-
-        return Uri.parse("file://" + folder + "/" + file);
     }
 
     private void prepareUrl(final String url) throws IOException {
