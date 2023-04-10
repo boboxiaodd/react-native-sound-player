@@ -80,9 +80,28 @@ public class RNSoundPlayerModule extends ReactContextBaseJavaModule implements L
     }
 
     @ReactMethod
-    public void playUrl(String url) throws IOException {
-        prepareUrl(url);
-        this.resume();
+    public void playUrl(String url) throws IOException { 
+        MediaPlayer mp = new MediaPlayer();
+        Uri uri = Uri.parse(url);
+        mp.setDataSource(getCurrentActivity(), uri);
+        mp.setOnCompletionListener(
+                new OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mediaPlayer) {
+                        mediaPlayer.reset();
+                        mediaPlayer.release();
+                        mediaPlayer = null;
+                    }
+                });
+        mp.setOnPreparedListener(
+                new OnPreparedListener() {
+                    @Override
+                    public void onPrepared(MediaPlayer mediaPlayer) {
+                        mediaPlayer.start();
+                    }
+                }
+        );
+        mp.prepare();
     }
 
     @ReactMethod
