@@ -13,7 +13,6 @@ static NSString *const EVENT_FINISHED_LOADING_FILE = @"FinishedLoadingFile";
 static NSString *const EVENT_FINISHED_LOADING_URL = @"FinishedLoadingURL";
 static NSString *const EVENT_FINISHED_PLAYING = @"FinishedPlaying";
 
-
 RCT_EXPORT_METHOD(playUrl:(NSString *)url) {
     [self prepareUrl:url];
     [self.avPlayer play];
@@ -24,8 +23,16 @@ RCT_EXPORT_METHOD(loadUrl:(NSString *)url) {
 }
 
 RCT_EXPORT_METHOD(playSoundFile:(NSString *)name ofType:(NSString *)type) {
-    [self mountSoundFile:name ofType:type];
-    [self.player play];
+    NSURL * soundURL = [NSURL URLWithString:name];
+    if(!_player2){
+        _player2 = [[AVAudioPlayer alloc] initWithContentsOfURL:soundURL error:nil];
+        _player2.delegate = self;
+        [_player2 play];
+    }else if(!_player3){
+        _player3 = [[AVAudioPlayer alloc] initWithContentsOfURL:soundURL error:nil];
+        _player3.delegate = self;
+        [_player3 play];
+    }
 }
 
 RCT_EXPORT_METHOD(playSoundFileWithDelay:(NSString *)name ofType:(NSString *)type delay:(double)delay) {
@@ -143,6 +150,14 @@ RCT_REMAP_METHOD(getInfo,
 }
 
 - (void) audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
+    if([player isEqual: self.player2]){
+        _player2 = nil;
+        return;
+    }
+    if([player isEqual: self.player3]){
+        _player3 = nil;
+        return;
+    }
     [self sendEventWithName:EVENT_FINISHED_PLAYING body:@{@"success": [NSNumber numberWithBool:flag]}];
 }
 
